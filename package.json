@@ -1,0 +1,35 @@
+{
+  "name": "wowo-docs",
+  "version": "0.1.0",
+  "description": "Local interactive documentation for OpenAPI specifications",
+  "type": "module",
+  "bin": {
+    "wowo": "./bin/wowo.js"
+  },
+  "exports": {
+    ".": "./src/index.js",
+    "./cli": "./src/cli/index.js",
+    "./openapi": "./src/openapi/index.js",
+    "./server": "./src/server/server.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "ui/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test",
+    "dev": "node ./bin/wowo.js ./examples/openapi.yaml"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "open": "^10.1.0",
+    "swagger-ui-dist": "^5.17.14",
+    "yaml": "^2.5.1"
+  }
+}

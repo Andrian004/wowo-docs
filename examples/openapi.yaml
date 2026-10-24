@@ -1,0 +1,25 @@
+openapi: 3.0.3
+info:
+  title: Example API
+  description: Example API used for WOWO development.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /users:
+    get:
+      summary: Get users
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
