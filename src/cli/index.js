@@ -1,7 +1,14 @@
 import { pathToFileURL } from "node:url";
+import { stat } from "node:fs/promises";
+import path from "node:path";
 import { parseArgs } from "./args.js";
 import { HELP_TEXT } from "./help.js";
 import { loadOpenApi, validateOpenApi } from "../openapi/index.js";
+import {
+  findOpenApiSpecifications,
+  scanDirectory,
+} from "../discovery/index.js";
+import { promptUserSelection } from "./prompt.js";
 import { startServer } from "../server/server.js";
 import { openBrowser } from "../browser/open.js";
 import { logger } from "../utils/logger.js";
@@ -11,6 +18,7 @@ export async function run({
   argv = process.argv.slice(2),
   openBrowserFn = openBrowser,
   output = logger,
+  selectSpec = promptUserSelection,
   waitForShutdown = true,
 } = {}) {
   const options = parseArgs(argv);
@@ -19,35 +27,82 @@ export async function run({
     return;
   }
   if (options.version) {
-    output.info("wowo 0.1.0");
+    output.info("wowo 0.2.0");
     return;
   }
   if (!options.file) {
-    throw new WowoError("Missing required argument: <file>\n\nRun `wowo --help` for usage.", {
-      code: "MISSING_FILE",
+    throw new WowoError(
+      "Missing required argument: <file|directory>\n\nRun `wowo --help` for usage.",
+      { code: "MISSING_FILE" },
+    );
+  }
+
+  const targetPath = path.resolve(options.file);
+  let targetStat;
+  try {
+    targetStat = await stat(targetPath);
+  } catch (error) {
+    if (error.code === "ENOENT" || error.code === "ENOTDIR") {
+      throw new WowoError(`Path not found:\n  ${options.file}`, {
+        code: "PATH_NOT_FOUND",
+        cause: error,
+      });
+    }
+    throw new WowoError(`Unable to access path:\n  ${options.file}`, {
+      code: "PATH_ACCESS_ERROR",
+      cause: error,
     });
   }
 
-  const { document, filePath } = await loadOpenApi(options.file);
+  let selectedPath = targetPath;
+  if (targetStat.isDirectory()) {
+    output.info("Scanning for OpenAPI specifications...");
+    const candidateFiles = await scanDirectory(targetPath);
+    const specifications = await findOpenApiSpecifications(candidateFiles);
+    if (specifications.length === 0) {
+      throw new WowoError(
+        `No OpenAPI specifications found in ${options.file}`,
+        { code: "NO_SPECS_FOUND" },
+      );
+    }
+
+    if (specifications.length === 1) {
+      output.success(`Found 1 specification: ${specifications[0].title}`);
+      selectedPath = specifications[0].path;
+    } else {
+      output.success(`Found ${specifications.length} specifications.`);
+      selectedPath = await selectSpec(specifications, targetPath);
+    }
+  } else if (!targetStat.isFile()) {
+    throw new WowoError(`Path is not a file or directory:\n  ${options.file}`, {
+      code: "INVALID_TARGET",
+    });
+  }
+
+  const { document, filePath } = await loadOpenApi(selectedPath);
   await validateOpenApi(document);
   output.success("OpenAPI loaded");
 
   const instance = await startServer({ document, port: options.port });
   output.success("Server started");
-  output.info(`\n  Spec\n    ${filePath}\n\n  Documentation\n    ${instance.url}`);
+  output.info(
+    `\nSpec: ${filePath}\n\nDocumentation: \x1b[36m${instance.url}\x1b[0m\n`,
+  );
 
   try {
     await openBrowserFn(instance.url);
     output.success("Browser opened");
   } catch (error) {
-    output.error(`Could not open the browser: ${error.message}\n  Open ${instance.url} manually.`);
+    output.error(
+      `Could not open the browser: ${error.message}\n  Open ${instance.url} manually.`,
+    );
   }
 
   if (!waitForShutdown) {
     return instance;
   }
 
-  output.info("\n  Press Ctrl+C to stop.");
+  output.info("\nPress \x1b[35m\x1b[1mCtrl+C\x1b[0m to stop.");
   await waitForSignals(instance, output);
 }
 
@@ -59,10 +114,15 @@ function waitForSignals(instance, output) {
       stopping = true;
       process.off("SIGINT", onInterrupt);
       process.off("SIGTERM", onTerminate);
-      output.info("\n  Stopping WOWO...");
+      output.info("\nStopping WOWO...");
+      output.info(
+        "\nYou can:" +
+          "\n • \x1b[36m\x1b[1mClose the browser\x1b[0m to shut down gracefully." +
+          "\n • Or press \x1b[35m\x1b[1mCtrl+C\x1b[0m again to force close.",
+      );
       try {
         await instance.close();
-        output.info("  Server stopped.");
+        output.info("\nServer stopped.");
         resolve();
       } catch (error) {
         reject(error);
@@ -75,7 +135,10 @@ function waitForSignals(instance, output) {
   });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   run().catch((error) => {
     logger.error(error.message);
     process.exitCode = 1;

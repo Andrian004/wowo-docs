@@ -1,6 +1,7 @@
 # WOWO Docs
 
 Open a local, interactive Swagger UI for an OpenAPI 3.x specification.
+Point WOWO at a directory to discover and select specifications recursively.
 
 ## Requirements
 
@@ -15,17 +16,23 @@ wowo ./openapi.yaml
 
 WOWO accepts `.yaml`, `.yml`, and `.json` files. The local documentation server
 binds to `127.0.0.1:3000` by default and opens your browser after it is ready.
+You can also scan a directory; one matching specification starts automatically,
+and multiple matches are presented in an arrow-key selector:
 
 ```bash
 wowo ./docs/api.yaml --port 8080
+wowo .
 ```
+
+Directory discovery recursively checks supported file extensions and ignores
+`node_modules`, `.git`, `.vscode`, `dist`, and `build`.
 
 Press **Ctrl+C** to stop the server.
 
 ## CLI
 
 ```text
-wowo <file> [options]
+wowo <file|directory> [options]
 
 Options:
   -p, --port <port>    Port for the local documentation server (default: 3000)

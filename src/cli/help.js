@@ -1,10 +1,10 @@
 export const HELP_TEXT = `WOWO — Local OpenAPI Documentation
 
 Usage:
-  wowo <file> [options]
+  wowo <file|directory> [options]
 
 Arguments:
-  <file>               Path to an OpenAPI specification
+  <file|directory>     OpenAPI specification or directory to scan
 
 Options:
   -p, --port <port>    Port to run the documentation server (default: 3000)
@@ -14,4 +14,5 @@ Options:
 Examples:
   wowo ./openapi.yaml
   wowo ./docs/api.yaml
+  wowo .
   wowo ./openapi.yaml --port 8080`;

@@ -31,7 +31,7 @@ export function parseArgs(argv) {
         code: "UNKNOWN_OPTION",
       });
     } else if (options.file) {
-      throw new WowoError("Only one OpenAPI file can be specified.", {
+      throw new WowoError("Only one file or directory can be specified.", {
         code: "TOO_MANY_FILES",
       });
     } else {

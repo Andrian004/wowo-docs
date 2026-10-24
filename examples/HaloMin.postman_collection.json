@@ -1,0 +1,139 @@
+{
+  "info": {
+    "_postman_id": "dedd8f77-15b7-42cc-85c6-58a1ea2661b8",
+    "name": "HaloMin",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "28452489",
+    "_collection_link": "https://go.postman.co/collection/28452489-dedd8f77-15b7-42cc-85c6-58a1ea2661b8?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "chatbot",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXEzeHF5Y3cwMDAweTh1dTc0d2RsY3Q5Iiwic2Vzc2lvbklkIjoiY21xNDBhbHh3MDAwMGxndXV0MGV5d2xhNSIsImlhdCI6MTc4MDg1MDMxMCwiZXhwIjoxNzgwODUzOTEwfQ.dTHSZl0r1Dzc66ygPF8Wp7U2FZiLUUv9vqs2I5SoUNQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Asep\",\r\n    \"modelVersion\": \"default\",\r\n    \"description\": \"test\",\r\n    \"apiKey\": null\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/v1/chatbots",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "v1",
+                "chatbots"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "knowledge",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbXEzeHF5Y3cwMDAweTh1dTc0d2RsY3Q5Iiwic2Vzc2lvbklkIjoiY21xNDBhbHh3MDAwMGxndXV0MGV5d2xhNSIsImlhdCI6MTc4MDg1MDMxMCwiZXhwIjoxNzgwODUzOTEwfQ.dTHSZl0r1Dzc66ygPF8Wp7U2FZiLUUv9vqs2I5SoUNQ",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"title\": \"About Webpreneurly\",\r\n    \"content\": \"Webpreneurly adalah layanan penyedia jasa pembuatan website yang menyediakan 3 buah paket, yaitu Basic, Grow dan Advance.\",\r\n    \"type\": \"TEXT\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/v1/chatbots/knowledge/{{chatbotId}}",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "v1",
+                "chatbots",
+                "knowledge",
+                "{{chatbotId}}"
+              ],
+              "query": [
+                {
+                  "key": "",
+                  "value": null,
+                  "type": "text",
+                  "disabled": true
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "auth",
+      "item": [
+        {
+          "name": "login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"email\": \"alexpartamax@mail.com\",\r\n    \"password\": \"password\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8000/v1/auth/login",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
