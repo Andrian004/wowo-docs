@@ -1,8 +1,12 @@
 import prompts from "prompts";
 import path from "node:path";
 import { WowoError } from "../utils/errors.js";
+import type { DiscoveredSpecification } from "../discovery/matcher.js";
 
-export async function promptUserSelection(specifications, directoryPath) {
+export async function promptUserSelection(
+  specifications: DiscoveredSpecification[],
+  directoryPath: string,
+): Promise<string> {
   const choices = specifications.map((specification) => ({
     title: `${specification.title}  (${formatRelativePath(specification.path, directoryPath)})`,
     value: specification.path,
@@ -29,6 +33,6 @@ export async function promptUserSelection(specifications, directoryPath) {
   return response.filePath;
 }
 
-function formatRelativePath(filePath, directoryPath) {
+function formatRelativePath(filePath: string, directoryPath: string): string {
   return path.relative(directoryPath, filePath).split(path.sep).join("/");
 }

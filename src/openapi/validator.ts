@@ -1,8 +1,11 @@
 import SwaggerParser from "@apidevtools/swagger-parser";
-import { WowoError } from "../utils/errors.js";
+import type { OpenAPI } from "openapi-types";
+import { getErrorMessage, WowoError } from "../utils/errors.js";
 
-export async function validateOpenApi(document) {
-  const version = document?.openapi;
+export async function validateOpenApi(
+  document: OpenAPI.Document,
+): Promise<OpenAPI.Document> {
+  const version = "openapi" in document ? document.openapi : undefined;
   if (typeof version !== "string" || !/^3\.(0|1)\.\d+(?:[-+].*)?$/.test(version)) {
     if (typeof version === "string" && /^2(?:\.|$)/.test(version)) {
       throw new WowoError(
@@ -22,7 +25,7 @@ export async function validateOpenApi(document) {
     });
   } catch (error) {
     throw new WowoError(
-      `Invalid OpenAPI specification.\n\n  ${error.message}`,
+      `Invalid OpenAPI specification.\n\n  ${getErrorMessage(error)}`,
       { code: "INVALID_OPENAPI", cause: error },
     );
   }

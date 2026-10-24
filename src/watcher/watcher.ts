@@ -1,10 +1,20 @@
 import { watch } from "chokidar";
 
+export interface WatchOpenApiOptions {
+  onChange(): Promise<void> | void;
+  onError(error: unknown): void;
+  debounceMs?: number;
+}
+
+export interface OpenApiWatcher {
+  close(): Promise<void>;
+}
+
 export function watchOpenApiFile(
-  filePath,
-  { onChange, onError, debounceMs = 200 } = {},
-) {
-  let debounceTimer;
+  filePath: string,
+  { onChange, onError, debounceMs = 200 }: WatchOpenApiOptions,
+): OpenApiWatcher {
+  let debounceTimer: NodeJS.Timeout | undefined;
   let closed = false;
   let processing = Promise.resolve();
   const watcher = watch(filePath, {
@@ -15,7 +25,7 @@ export function watchOpenApiFile(
     },
   });
 
-  const scheduleChange = () => {
+  const scheduleChange = (): void => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       processing = processing
@@ -23,14 +33,14 @@ export function watchOpenApiFile(
           if (!closed) await onChange();
         })
         .catch((error) => {
-          onError(error);
+          onError(error instanceof Error ? error : new Error(String(error)));
         });
     }, debounceMs);
   };
 
   watcher.on("change", scheduleChange);
   watcher.on("add", scheduleChange);
-  watcher.on("error", onError);
+  watcher.on("error", (error) => onError(error));
 
   return {
     async close() {

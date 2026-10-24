@@ -1,6 +1,7 @@
 import { pathToFileURL } from "node:url";
 import { stat } from "node:fs/promises";
 import path from "node:path";
+import type { DiscoveredSpecification } from "../discovery/matcher.js";
 import { parseArgs } from "./args.js";
 import { HELP_TEXT } from "./help.js";
 import { loadOpenApi, validateOpenApi } from "../openapi/index.js";
@@ -11,9 +12,29 @@ import {
 import { promptUserSelection } from "./prompt.js";
 import { startServer } from "../server/server.js";
 import { openBrowser } from "../browser/open.js";
-import { logger } from "../utils/logger.js";
-import { WowoError } from "../utils/errors.js";
-import { watchOpenApiFile } from "../watcher/watcher.js";
+import { logger, type Logger } from "../utils/logger.js";
+import { getErrorCode, getErrorMessage, WowoError } from "../utils/errors.js";
+import {
+  watchOpenApiFile,
+  type OpenApiWatcher,
+  type WatchOpenApiOptions,
+} from "../watcher/watcher.js";
+import type { ServerInstance } from "../server/server.js";
+
+export interface RunOptions {
+  argv?: string[];
+  openBrowserFn?: (url: string) => Promise<void>;
+  output?: Logger;
+  selectSpec?: (
+    specifications: DiscoveredSpecification[],
+    directoryPath: string,
+  ) => Promise<string>;
+  watchFile?: (
+    filePath: string,
+    options: WatchOpenApiOptions,
+  ) => OpenApiWatcher;
+  waitForShutdown?: boolean;
+}
 
 export async function run({
   argv = process.argv.slice(2),
@@ -22,7 +43,7 @@ export async function run({
   selectSpec = promptUserSelection,
   watchFile = watchOpenApiFile,
   waitForShutdown = true,
-} = {}) {
+}: RunOptions = {}): Promise<ServerInstance | void> {
   const options = parseArgs(argv);
   if (options.help) {
     output.info(HELP_TEXT);
@@ -44,16 +65,19 @@ export async function run({
   try {
     targetStat = await stat(targetPath);
   } catch (error) {
-    if (error.code === "ENOENT" || error.code === "ENOTDIR") {
+    if (getErrorCode(error) === "ENOENT" || getErrorCode(error) === "ENOTDIR") {
       throw new WowoError(`Path not found:\n  ${options.file}`, {
         code: "PATH_NOT_FOUND",
         cause: error,
       });
     }
-    throw new WowoError(`Unable to access path:\n  ${options.file}`, {
+    throw new WowoError(
+      `Unable to access path:\n  ${options.file}\n\n  ${getErrorMessage(error)}`,
+      {
       code: "PATH_ACCESS_ERROR",
       cause: error,
-    });
+      },
+    );
   }
 
   let selectedPath = targetPath;
@@ -105,16 +129,15 @@ export async function run({
           instance.updateDocument(updated.document);
           output.success("Reloaded documentation");
         } catch (error) {
-          output.error(`Could not reload OpenAPI file: ${error.message}`);
+          output.error(`Could not reload OpenAPI file: ${getErrorMessage(error)}`);
         }
       },
-      onError: (error) => output.error(`File watcher error: ${error.message}`),
+      onError: (error) => output.error(`File watcher error: ${getErrorMessage(error)}`),
     });
-    instance.closeWatcher = () => watcher.close();
-    const closeServer = instance.close;
+    const closeServer = instance.close.bind(instance);
     instance.close = async () => {
       try {
-        await instance.closeWatcher();
+        await watcher.close();
       } finally {
         await closeServer();
       }
@@ -127,7 +150,7 @@ export async function run({
     output.success("Browser opened");
   } catch (error) {
     output.error(
-      `Could not open the browser: ${error.message}\n  Open ${instance.url} manually.`,
+      `Could not open the browser: ${getErrorMessage(error)}\n  Open ${instance.url} manually.`,
     );
   }
 
@@ -139,8 +162,8 @@ export async function run({
   await waitForSignals(instance, output);
 }
 
-function waitForSignals(instance, output) {
-  return new Promise((resolve, reject) => {
+function waitForSignals(instance: ServerInstance, output: Logger): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     let stopping = false;
     const stop = async () => {
       if (stopping) return;
@@ -173,7 +196,7 @@ if (
   import.meta.url === pathToFileURL(process.argv[1]).href
 ) {
   run().catch((error) => {
-    logger.error(error.message);
+    logger.error(getErrorMessage(error));
     process.exitCode = 1;
   });
 }

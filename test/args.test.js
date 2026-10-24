@@ -5,7 +5,7 @@ import { parseArgs } from "../src/cli/args.js";
 test("parses file and default port", () => {
   assert.deepEqual(parseArgs(["./openapi.yaml"]), {
     file: "./openapi.yaml",
-    port: 3000,
+    port: 8787,
     help: false,
     version: false,
     watch: false,

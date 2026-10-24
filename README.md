@@ -15,12 +15,13 @@ wowo ./openapi.yaml
 ```
 
 WOWO accepts `.yaml`, `.yml`, and `.json` files. The local documentation server
-binds to `127.0.0.1:3000` by default and opens your browser after it is ready.
+binds to `127.0.0.1:8787` by default and opens your browser after it is ready.
 You can also scan a directory; one matching specification starts automatically,
 and multiple matches are presented in an arrow-key selector:
 
 ```bash
 wowo ./docs/api.yaml --port 8080
+wowo ./docs
 wowo .
 wowo ./openapi.yaml --watch
 ```
@@ -39,7 +40,7 @@ Press **Ctrl+C** to stop the server.
 wowo <file|directory> [options]
 
 Options:
-  -p, --port <port>    Port for the local documentation server (default: 3000)
+  -p, --port <port>    Port for the local documentation server (default: 8787)
   -w, --watch          Reload documentation when the specification changes
   -h, --help           Show help
   -v, --version        Show version
@@ -52,9 +53,14 @@ specification at `/openapi.json`; it does not expose project files.
 
 ```bash
 npm install
+npm run build
+npm run typecheck
 npm test
 npm run dev
 ```
+
+The TypeScript sources are bundled to `dist/` with tsdown. `npm pack` builds
+the package before creating the tarball.
 
 ## License
 

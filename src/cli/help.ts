@@ -7,7 +7,7 @@ Arguments:
   <file|directory>     OpenAPI specification or directory to scan
 
 Options:
-  -p, --port <port>    Port to run the documentation server (default: 3000)
+  -p, --port <port>    Port to run the documentation server (default: 8787)
   -w, --watch          Reload documentation when the specification changes
   -h, --help           Show help
   -v, --version        Show version

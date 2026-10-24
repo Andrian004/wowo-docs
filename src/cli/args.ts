@@ -1,9 +1,17 @@
 import { WowoError } from "../utils/errors.js";
 
-export function parseArgs(argv) {
-  const options = {
+export interface CliOptions {
+  file: string | undefined;
+  port: number;
+  help: boolean;
+  version: boolean;
+  watch: boolean;
+}
+
+export function parseArgs(argv: string[]): CliOptions {
+  const options: CliOptions = {
     file: undefined,
-    port: 3000,
+    port: 8787,
     help: false,
     version: false,
     watch: false,
@@ -45,16 +53,19 @@ export function parseArgs(argv) {
   return options;
 }
 
-function parsePort(value) {
+function parsePort(value: string): number {
   if (!/^\d+$/.test(value)) {
     throw new WowoError(`Invalid port: ${value}`, { code: "INVALID_PORT" });
   }
 
   const port = Number(value);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new WowoError(`Invalid port: ${value}. Use a number from 1 to 65535.`, {
-      code: "INVALID_PORT",
-    });
+    throw new WowoError(
+      `Invalid port: ${value}. Use a number from 1 to 65535.`,
+      {
+        code: "INVALID_PORT",
+      },
+    );
   }
 
   return port;

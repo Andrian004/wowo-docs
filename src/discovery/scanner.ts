@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import path from "node:path";
-import { WowoError } from "../utils/errors.js";
+import { getErrorMessage, WowoError } from "../utils/errors.js";
 
 const IGNORED_DIRECTORIES = new Set([
   "node_modules",
@@ -11,19 +12,20 @@ const IGNORED_DIRECTORIES = new Set([
 ]);
 const SPEC_EXTENSIONS = new Set([".yaml", ".yml", ".json"]);
 
-export async function scanDirectory(directoryPath) {
+export async function scanDirectory(directoryPath: string): Promise<string[]> {
   const absoluteRoot = path.resolve(directoryPath);
   const files = [];
   const pendingDirectories = [absoluteRoot];
 
   while (pendingDirectories.length > 0) {
     const currentDirectory = pendingDirectories.pop();
-    let entries;
+    if (!currentDirectory) continue;
+    let entries: Dirent[];
     try {
       entries = await readdir(currentDirectory, { withFileTypes: true });
     } catch (error) {
       throw new WowoError(
-        `Unable to scan directory:\n  ${currentDirectory}\n\n  ${error.message}`,
+        `Unable to scan directory:\n  ${currentDirectory}\n\n  ${getErrorMessage(error)}`,
         { code: "DIRECTORY_READ_ERROR", cause: error },
       );
     }

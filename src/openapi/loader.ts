@@ -1,11 +1,14 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import YAML from "yaml";
-import { WowoError } from "../utils/errors.js";
+import { getErrorCode, getErrorMessage, WowoError } from "../utils/errors.js";
+import type { OpenAPI } from "openapi-types";
 
 const SUPPORTED_EXTENSIONS = new Set([".yaml", ".yml", ".json"]);
 
-export async function loadOpenApi(inputPath) {
+export async function loadOpenApi(
+  inputPath: string | undefined,
+): Promise<{ document: OpenAPI.Document; filePath: string }> {
   if (!inputPath) {
     throw new WowoError("Please provide a path to an OpenAPI file.", {
       code: "MISSING_FILE",
@@ -25,7 +28,7 @@ export async function loadOpenApi(inputPath) {
   try {
     fileStat = await stat(filePath);
   } catch (error) {
-    if (error.code === "ENOENT" || error.code === "ENOTDIR") {
+    if (getErrorCode(error) === "ENOENT" || getErrorCode(error) === "ENOTDIR") {
       throw new WowoError(`File not found:\n  ${inputPath}`, {
         code: "FILE_NOT_FOUND",
         cause: error,
@@ -54,15 +57,15 @@ export async function loadOpenApi(inputPath) {
   }
 
   try {
-    const document =
+    const parsed: unknown =
       extension === ".json" ? JSON.parse(content) : YAML.parse(content);
-    if (!document || typeof document !== "object" || Array.isArray(document)) {
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new TypeError("The document must contain a YAML or JSON object.");
     }
-    return { document, filePath };
+    return { document: parsed as OpenAPI.Document, filePath };
   } catch (error) {
     throw new WowoError(
-      `Failed to parse OpenAPI file:\n  ${inputPath}\n\n  ${error.message}`,
+      `Failed to parse OpenAPI file:\n  ${inputPath}\n\n  ${getErrorMessage(error)}`,
       { code: "PARSE_ERROR", cause: error },
     );
   }
