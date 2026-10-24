@@ -17,8 +17,27 @@ const ASSET_TYPES = new Map([
   [".svg", "image/svg+xml"],
 ]);
 
-export async function startServer({ document, port = 3000, host = "127.0.0.1" }) {
-  const html = await readFile(indexPath);
+export async function startServer({
+  document,
+  port = 3000,
+  host = "127.0.0.1",
+  watch = false,
+}) {
+  let html = await readFile(indexPath, "utf8");
+  if (watch) {
+    html = html.replace(
+      "</body>",
+      `<script>
+        const events = new EventSource("/api/events");
+        events.onmessage = (event) => {
+          if (event.data === "reload") window.location.reload();
+        };
+      </script>
+      </body>`,
+    );
+  }
+  const eventClients = new Set();
+  let activeDocument = document;
   const server = createHttpServer(async (request, response) => {
     const pathname = new URL(request.url, "http://localhost").pathname;
 
@@ -38,7 +57,25 @@ export async function startServer({ document, port = 3000, host = "127.0.0.1" })
         "Content-Type": "application/json; charset=utf-8",
         "Cache-Control": "no-store",
       });
-      response.end(request.method === "HEAD" ? undefined : JSON.stringify(document));
+      response.end(request.method === "HEAD" ? undefined : JSON.stringify(activeDocument));
+      return;
+    }
+
+    if (pathname === "/api/events") {
+      if (request.method !== "GET") {
+        response.writeHead(405, { Allow: "GET" }).end();
+        return;
+      }
+
+      response.writeHead(200, {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      });
+      response.write(": connected\n\n");
+      eventClients.add(response);
+      response.on("close", () => eventClients.delete(response));
       return;
     }
 
@@ -83,8 +120,20 @@ export async function startServer({ document, port = 3000, host = "127.0.0.1" })
   return {
     server,
     url: `http://${host}:${actualPort}`,
+    updateDocument(nextDocument) {
+      activeDocument = nextDocument;
+      for (const client of eventClients) {
+        if (!client.destroyed) {
+          client.write("data: reload\n\n");
+        } else {
+          eventClients.delete(client);
+        }
+      }
+    },
     close: () =>
       new Promise((resolve, reject) => {
+        for (const client of eventClients) client.end();
+        eventClients.clear();
         server.close((error) => (error ? reject(error) : resolve()));
       }),
   };

@@ -6,6 +6,7 @@ export function parseArgs(argv) {
     port: 3000,
     help: false,
     version: false,
+    watch: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -15,6 +16,8 @@ export function parseArgs(argv) {
       options.help = true;
     } else if (argument === "--version" || argument === "-v") {
       options.version = true;
+    } else if (argument === "--watch" || argument === "-w") {
+      options.watch = true;
     } else if (argument === "--port" || argument === "-p") {
       const value = argv[index + 1];
       if (!value || value.startsWith("-")) {

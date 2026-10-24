@@ -13,12 +13,14 @@ import { startServer } from "../server/server.js";
 import { openBrowser } from "../browser/open.js";
 import { logger } from "../utils/logger.js";
 import { WowoError } from "../utils/errors.js";
+import { watchOpenApiFile } from "../watcher/watcher.js";
 
 export async function run({
   argv = process.argv.slice(2),
   openBrowserFn = openBrowser,
   output = logger,
   selectSpec = promptUserSelection,
+  watchFile = watchOpenApiFile,
   waitForShutdown = true,
 } = {}) {
   const options = parseArgs(argv);
@@ -27,7 +29,7 @@ export async function run({
     return;
   }
   if (options.version) {
-    output.info("wowo 0.2.0");
+    output.info("wowo 0.3.0");
     return;
   }
   if (!options.file) {
@@ -83,11 +85,42 @@ export async function run({
   await validateOpenApi(document);
   output.success("OpenAPI loaded");
 
-  const instance = await startServer({ document, port: options.port });
+  const instance = await startServer({
+    document,
+    port: options.port,
+    watch: options.watch,
+  });
   output.success("Server started");
   output.info(
     `\nSpec: ${filePath}\n\nDocumentation: \x1b[36m${instance.url}\x1b[0m\n`,
   );
+
+  if (options.watch) {
+    const watcher = watchFile(filePath, {
+      onChange: async () => {
+        output.info(`\n↻ File changed: ${path.relative(process.cwd(), filePath)}`);
+        try {
+          const updated = await loadOpenApi(filePath);
+          await validateOpenApi(updated.document);
+          instance.updateDocument(updated.document);
+          output.success("Reloaded documentation");
+        } catch (error) {
+          output.error(`Could not reload OpenAPI file: ${error.message}`);
+        }
+      },
+      onError: (error) => output.error(`File watcher error: ${error.message}`),
+    });
+    instance.closeWatcher = () => watcher.close();
+    const closeServer = instance.close;
+    instance.close = async () => {
+      try {
+        await instance.closeWatcher();
+      } finally {
+        await closeServer();
+      }
+    };
+    output.info("\n👀 Watching for file changes...");
+  }
 
   try {
     await openBrowserFn(instance.url);

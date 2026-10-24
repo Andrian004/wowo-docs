@@ -1,0 +1,156 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HaloMin",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000"
+    }
+  ],
+  "paths": {
+    "/v1/chatbots": {
+      "post": {
+        "summary": "create",
+        "responses": {
+          "default": {
+            "description": "Create chatbot",
+            "content": {}
+          }
+        },
+        "tags": ["chatbot"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "modelVersion": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "apiKey": {
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "name": "Asep",
+                "modelVersion": "default",
+                "description": "test",
+                "apiKey": null
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chatbots/knowledge/{chatbotId}": {
+      "post": {
+        "summary": "knowledge",
+        "responses": {
+          "default": {
+            "description": "Knowledge detail",
+            "content": {}
+          }
+        },
+        "tags": ["chatbot"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "title": "About Webpreneurly",
+                "content": "Webpreneurly adalah layanan penyedia jasa pembuatan website yang menyediakan 3 buah paket, yaitu Basic, Grow dan Advance.",
+                "type": "TEXT"
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "chatbotId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "{{chatbotId}}"
+        }
+      ]
+    },
+    "/v1/auth/login": {
+      "post": {
+        "summary": "login",
+        "responses": {
+          "default": {
+            "description": "Login",
+            "content": {}
+          }
+        },
+        "tags": ["auth"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "email": "alexpartamax@mail.com",
+                "password": "password"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

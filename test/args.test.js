@@ -8,12 +8,15 @@ test("parses file and default port", () => {
     port: 3000,
     help: false,
     version: false,
+    watch: false,
   });
 });
 
 test("parses a custom port in either form", () => {
   assert.equal(parseArgs(["./openapi.yaml", "--port", "8080"]).port, 8080);
   assert.equal(parseArgs(["--port=9000", "./openapi.yaml"]).port, 9000);
+  assert.equal(parseArgs(["./openapi.yaml", "--watch"]).watch, true);
+  assert.equal(parseArgs(["./openapi.yaml", "-w"]).watch, true);
 });
 
 test("rejects invalid ports and extra files", () => {

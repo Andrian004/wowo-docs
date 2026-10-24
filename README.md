@@ -22,10 +22,14 @@ and multiple matches are presented in an arrow-key selector:
 ```bash
 wowo ./docs/api.yaml --port 8080
 wowo .
+wowo ./openapi.yaml --watch
 ```
 
 Directory discovery recursively checks supported file extensions and ignores
 `node_modules`, `.git`, `.vscode`, `dist`, and `build`.
+Use `--watch` (or `-w`) to monitor the selected specification; valid saves
+update the browser automatically, while invalid saves are reported in the
+terminal and leave the last valid documentation available.
 
 Press **Ctrl+C** to stop the server.
 
@@ -36,6 +40,7 @@ wowo <file|directory> [options]
 
 Options:
   -p, --port <port>    Port for the local documentation server (default: 3000)
+  -w, --watch          Reload documentation when the specification changes
   -h, --help           Show help
   -v, --version        Show version
 ```

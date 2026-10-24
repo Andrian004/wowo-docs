@@ -49,6 +49,7 @@ components:
         - id
         - name
         - type
+        - createdAt
       properties:
         id:
           $ref: "#/components/schemas/SpacecraftId"
@@ -63,6 +64,8 @@ components:
             - spaceplane
             - station
         description:
+          type: string
+        createdAt:
           type: string
     Error:
       type: object
