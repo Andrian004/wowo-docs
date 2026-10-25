@@ -29,6 +29,16 @@
     "README.md",
     "LICENSE"
   ],
+  "author": "Andrian004",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Andrian004/wowo-docs"
+  },
+  "keywords": [
+    "openapi",
+    "docs"
+  ],
   "types": "./dist/src/index.d.mts",
   "engines": {
     "node": ">=18"
